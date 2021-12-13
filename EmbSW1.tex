@@ -1,0 +1,41 @@
+\documentclass[titlepage=true]{scrartcl}
+
+\input{header/zusammenfassung}
+\input{header/hyperref}
+
+\input{header/listings}
+
+\setDefaultArrayStretch{1.8}
+
+\title{EmbSW1}
+\author{Benjamin Bucheli}
+\begin{document}
+\begin{titlepage}
+   \thispagestyle{empty}
+   \maketitle
+\end{titlepage}
+
+\lstset{style=Cpp}
+\setcounter{tocdepth}{2}
+\tableofcontents \newpage
+
+\include{sections/EmbeddedRTSystems}
+\include{sections/HW_SW_Codesign}
+\include{sections/Modellierung}
+\include{sections/FSM}
+\include{sections/FSM_Realisierung}
+\include{sections/Modularisierung}
+\include{sections/Patterns}
+\include{sections/EventBasedSystems}
+\include{sections/Scheduling}
+\include{sections/Concurrency} % Fehler im Dokument
+\include{sections/Language_linkage}
+\include{sections/Computerarithmetik}
+\include{sections/Plattformen}
+\include{sections/Multicore}
+\include{sections/HAL}
+\include{sections/Eigene_Notizen}
+
+%\include{sections/Bootstrap}
+
+\end{document}

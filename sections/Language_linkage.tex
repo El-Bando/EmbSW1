@@ -1,0 +1,125 @@
+\section{language linkage}
+Das \"ubersetzen von Programmiersprachen in einen Compiler-Syntax wird als language linkage bezeichnet.\\
+Der Linker ben\"otigt einen eindeutigen Namen f\"ur jede Funktion. In C muss der Funktionsname 
+Projektweit eindeutig sein. In C++ kann es komplizierter sein durch die Objektorierntierte Programmierung. 
+Das Zuweisen eines eindeutigen Namens in C++ wird als \textit{Name Mangeling} bezeichnet.
+
+\subsection{Interfacing with C}
+\subsubsection{Plain Old Data Types (POD Types)}
+\begin{itemize}
+    \item Datentypen, die bereits in C vorhanden sind, werden als POD Types bezeichnet
+    \item Dazu geh\"oren \dots
+    \begin{itemize}
+        \item \dots char, short, int, long, jeweils signed und unsigned
+        \item \dots float, double
+    \end{itemize}
+    \item POD types funktionieren in C++ identisch zu C
+\end{itemize}
+
+\begin{multicols}{2}
+    \subsubsection{C language linkage}
+C Linker h\"angen f\"ur ihre interne Darstellung h\"aufig ein Underscore an den Funktionsnamen, 
+um ein label in Assembler zu erhalten. Die Funktion foo() wird dann zu \_foo. 
+Diese Form wird als \textit{C language linkage} bezeichnet.
+    \vfill\null
+    \columnbreak
+    \subsubsection{C++ language linkage}
+C++ Linker betreiben f\"ur ihre interne Darstellung \textit{Name Mangeling}. 
+Die funktion \dots 
+\begin{itemize}
+    \item foo(int) wird zu \_foo\_i
+    \item foo(double, int) wird zu \_foo\_d\_i
+    \item MyClass::foo(int) wird zu \_MyClass\_foo\_i
+\end{itemize}
+Diese Form wird als \textit{C++ language linkage} bezeichnet. Mit \textit{c++filt} kann 
+der unmangled name ermittelt werden.
+\end{multicols}
+
+\subsubsection{Probleme}
+\begin{itemize}
+    \item Annahme:\\Aus C++ wird eine Funktion foo(int) aufgerufen, die in einer compilierten
+    C-Bibliothek vorliegt.
+    \item Der \textcolor{red}{C++-Linker} sucht nach einer Funktion \_foo\textcolor{red}{\_i}
+    \item Da es eine C-Bibliothek ist, heisst die Funktion aber \_foo
+    \item Dem C++-Linker muss mitgeteilt werden, dass diese Funktion C Linkage hat.
+\end{itemize}
+
+\subsubsection{Festlegen der Language Linkage}
+Im Funktionsprototypen (C++-seitig) kann die language linkage festgelegt werden.
+\begin{lstlisting}
+    extern "C" void foo(int); // use C language linkage
+    extern void goo(int); // use C++ language linkage
+    void hoo(int); // use C++ language linkage
+    extern "C++" void koo(int); // use C++ language linkage
+    extern "C"
+    {
+    // list multiple prototypes with C linkage, or
+    // #include C header file(s)
+    }
+\end{lstlisting}
+\newpage
+
+\subsubsection{Anwendung extern 'C' im Headerfile}
+\begin{multicols}{2}
+\begin{lstlisting}
+    #ifdef __cplusplus
+    extern "C"
+    {
+    #endif
+    // list multiple prototypes with C linkage, or
+    // #include C header file(s)
+    #ifdef __cplusplus
+    }
+    #endif
+\end{lstlisting}
+\vfill\null
+\columnbreak
+\_cplusplus ist dann definiert, wenn mit einem C++-Compiler compiliert wird.
+Auf diese Weise versehene Headerfiles können sowohl in C‐ als auch in C++‐Dateien included 
+werden. Beide Compiler (C, C++) k\"onnen diese Header \"ubersetzen.
+\end{multicols}
+
+\subsubsection{C++-Code aus C aufrufen}
+\begin{itemize}
+    \item C kennt keine Klassen
+    \item C kennt den this-Pointer nicht
+    \item Aus C können keine C++-Elementfunktionen direkt aufgerufen werden
+    \item L\"osung: C Wrapper Funktionen f\_ur C zur Verf\"ugung stellen
+    \begin{itemize}
+        \item Erkl\"arung anhand konkretem Beispiel (Dining Philosopher)
+    \end{itemize}
+    \item Ein Client ruft folgende Funktion auf: \lstinline{void Philosopher::live()}
+    \begin{itemize}
+        \item Diese Funktion soll im Hintergrund einen eigenen Thread starten
+    \end{itemize}
+    \item Die Threadfunktion \lstinline{void Philosopher::lifeThread()} soll eine Elementfunktion der Klasse sein.
+    \begin{itemize}
+        \item Dadurch hat diese Funktion alle Vorteile einer Elementfunktion, z.B. Zugriff auf alle Klassenelemente
+        \item Sie kann nun in C++ programmiert werden
+    \end{itemize}
+    \item Gestartet wird der Thread mit der \textbf{C-Funktion} pthread\_create()
+\end{itemize}
+
+\subsection{Programming style guide}
+Programmierkonventionen erleichtern einen konsistenten Stil, der auch von anderen verstanden wird.
+Grundsatz: \textit{Programme werden f\"ur Programmierer geschrieben, nicht f\"ur Compiler}
+Beispiel Style Guide: Google C++ Style Guide
+
+\subsubsection{Grunds\"atze}
+\begin{itemize}
+    \item Unwichtiges nicht \"uberbewerten
+    \item Entdeckte Warnings vom Compiler muss nicht in den Codierrichtlinien erwähnt werden.
+    \textcolor{red}{Mit h\"ochstem Warning level compilieren}
+    \item Eine Anweisung pro Zeile
+    \item Einr\"ucken
+    \item \textbf{Konsistenz und Konsequenz}
+    \item Namenskonventionen
+    \begin{itemize}
+        \item CamelCase
+        \item Keine \_ im Namen
+        \item Keine Pr\"afixe
+        \item Anfangsbuchstaben von Variablen, Objekte, Funktionen und Methoden \textit{klein}
+        \item Anfangsbuchstaben von eigenen Typen und Klassen \textit{gross}
+        \item Makros ausschliesslich \textit{gross} schreiben
+    \end{itemize}
+\end{itemize}
