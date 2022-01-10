@@ -59,7 +59,6 @@ Die Geschwindigkeit eines Prozessors kann mit den folgenden Methoden gesteigert 
 \end{itemize}
 \end{multicols}
 \newpage
-
 \subsection{Multicore Prozessor}
 \begin{multicols}{2}
 	\begin{itemize}
@@ -130,6 +129,8 @@ Gesamtaufgabe soll auf möglichst viele Cores aufgeteilt werden, um eine optimal
 	\item Es muss verhindert werden, dass irgendwann mit einer nicht aktuellen Kopie in einem Arbeitsregister gearbeitet wird
 \end{itemize}
 
+\newpage
+
 \subsection{Caches}
 \begin{itemize}
 	\item Caches sind (für den Prozessor) versteckte schnelle Speicher, die zwischen dem Prozessor und dem Hauptspeicher liegen
@@ -139,6 +140,8 @@ Gesamtaufgabe soll auf möglichst viele Cores aufgeteilt werden, um eine optimal
 	\item Cache Coherency: Wie erfährt ein Cache eines Cores, dass ein anderer Core diese Daten geändert hat? \lstinline{volatile} löst das Cache Coherency Problem nicht. Damit wird einzig sichergestellt, dass der Core einen Zugriff Richtung Speicher macht und sich nicht eine Kopie in einem Arbeitsregister hält
 \end{itemize}
 
+\textbf{$mittlere Zugriffszeit = (Hit Time) \cdot (Hit Rate) + (Miss Penalty) \cdot (Miss Rate)$}
+
 \subsubsection{Speicherzugriff zur Laufzeit}
 \begin{itemize}
 	\item \lstinline{volatile} hat Einfluss zur Compile-time und stellt sicher, dass der Compiler keinen Code generiert, bei dem er sich lokale Kopien in einem Register hält. Dank \lstinline{volatile} besteht der Code nun also aus einem expliziten Speicherzugriff
@@ -146,6 +149,15 @@ Gesamtaufgabe soll auf möglichst viele Cores aufgeteilt werden, um eine optimal
 	\item Beim ersten Zugriff auf diese Daten befinden sie sich logischerweise noch nicht im Cache. Ein Geschwindigkeitsgewinn ergibt sich erst ab dem zweiten Zugriff
 	\item Triviale Folgerung: Daten, auf die nur einmal zugegriffen werden muss, sollen nicht gecached werden
 \end{itemize}
+
+Grunds\"atzlich sollen alle Variablen ausserhalb des Programmkontextes des Prozessors/Threads ge\"andert werden k\"onnen.
+\begin{itemize}
+	\item Variablen, die speziell bei Embedded Systems ein Hardwareregister darstellen
+	\item Globale Variablen, auf die in mehreren Threads zugegriffen wird
+	\item Globale Variablen, die in Interruptserviceroutinen ge\"andert werden
+	\item Shared Variablen, die von einem anderen Prozessor/Core ge\"andert werden k\"onnen
+\end{itemize}
+All diese Variablen sollen mit volatile gekennzeichnet werden.
 
 \subsubsection{Lokalität}
 \begin{minipage}[t]{6cm}
@@ -166,7 +178,43 @@ Gesamtaufgabe soll auf möglichst viele Cores aufgeteilt werden, um eine optimal
 		\end{itemize}
 	\end{itemize}
 \end{minipage}
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Ersetzungsstrategie}
+\begin{itemize}
+	\item LRU (Least Recently Used): Zeile, deren Benutzung am weitesten zur\"uckliegt, \ldots
+	\item LFU (Least Frequently Used): Zeile, die am seltesten benutzt wird, \ldots
+	\item FIFO (First In First Out): Zeile, die am längsten im Cache ist, \ldots
+\end{itemize}
+\ldots wird ersetzt.
+\subsubsection{MESI Cache Coherence Protocol}
+\textbf{MESI}, aka \textit{Illinois protocol}, ist das meist gebrauchte Cache Coherence Protokoll.\\
+Jede Cache-Zeile hat eine von folgenden Zust\"anden:
+\begin{multicols}{2}
+	\begin{itemize}
+	\item \textbf{Modified (M)}
+	\begin{itemize}
+		\item Lokale Kopie wurde modifiziert, keine Kopie in einem anderen Cache.
+		\item Memory ist \textit{dirty}
+	\end{itemize}
+	\item \textbf{Exclusive (E)}
+	\begin{itemize}
+		\item Keine Kopie in einem anderen Cache
+		\item Memory is up to date
+	\end{itemize}
+	\vfill\null
+	\columnbreak
+	\item \textbf{Shared (S)}
+	\begin{itemize}
+		\item Unmodifizierte Kopie kann in einem anderen Cache vorhanden sein
+		\item Memory is up to date
+	\end{itemize}
+	\item \textbf{Invalid (I)}
+	\begin{itemize}
+		\item Zeigt eine ungenutzte Cache-line auf
+	\end{itemize}
+\end{itemize}
+\end{multicols}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Ping Pong Speicher}
 Szenario: Ein System empfängt Daten und schriebt diese in einen Buffer. Die Daten werden gefiltert und wieder ausgegeben. Wie kann bei Multicore Systemen verhindert werden, dass der Filterschritt mit inkonsistenten Daten arbeitet? \\
 Schlechte Lösung: Buffer wird synchronisiert, oder der Empfangsbuffer wird in einen zweiten Buffer kopiert \\
